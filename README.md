@@ -2,9 +2,9 @@
 
 ## Description
 
-This repository contains the software a collection of plugins which are not
-developed by Fixstudio. There are plugins for Maya, Nuke, Houdini, and more,
-they are loaded into OpenPype with the correct settings configuration.
+This repository contains a collection of plugins which are not developed by
+Fixstudio. There are plugins for Maya, Nuke, Houdini, and more,
+loaded into OpenPype with the correct settings configuration.
 
 ## Installation
 ### Get the source code
