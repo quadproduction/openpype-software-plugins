@@ -1,0 +1,65 @@
+#! /prod/softprod/apps/nuke/12.2v3/linux/libnuke-12.2.3.so -nx
+version 12.2 v3
+Gizmo {
+ addUserKnob {20 Pixelizer}
+ addUserKnob {14 Valeur R 0 100}
+ Valeur 1
+}
+ Input {
+  inputs 0
+  name Input1
+  xpos -654
+  ypos 426
+ }
+ Transform {
+  scale {{1/parent.Transform2.scale}}
+  center {{format.width/2} {format.height/2}}
+  filter impulse
+  name Transform1
+  xpos -654
+  ypos 482
+ }
+set N5fc62400 [stack 0]
+ Grade {
+  name Grade1
+  xpos -654
+  ypos 550
+ }
+ Transform {
+  scale {{parent.Valeur} {parent.Valeur}}
+  center {{format.width/2} {format.height/2}}
+  filter impulse
+  name Transform2
+  xpos -654
+  ypos 602
+ }
+ Crop {
+  box {0 0 {input.width} {input.height}}
+  reformat true
+  crop false
+  name Crop1
+  selected true
+  xpos -654
+  ypos 644
+ }
+set N47cb1d00 [stack 0]
+push $N5fc62400
+push 0
+ Viewer {
+  inputs 3
+  frame 108
+  frame_range 101-145
+  fps 25
+  input_number 2
+  viewerProcess "sRGB (ACES)"
+  name Viewer1
+  xpos -454
+  ypos 468
+ }
+push $N47cb1d00
+ Output {
+  name Output1
+  xpos -654
+  ypos 717
+ }
+end_group

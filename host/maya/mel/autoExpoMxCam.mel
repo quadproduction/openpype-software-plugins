@@ -1,0 +1,66 @@
+//Auto Expo Mx Camera
+
+global proc autoExpoMxCam() {
+
+	//Linear unit to millimeters
+	float $unitConv;
+	if(`currentUnit -q -linear` == "mm")
+		$unitConv = 1;
+	else if(`currentUnit -q -linear` == "cm")
+		$unitConv = 10;
+	else if(`currentUnit -q -linear` == "m")
+		$unitConv = 1000;
+	else if(`currentUnit -q -linear` == "in")
+		$unitConv = 25.4;
+	else if(`currentUnit -q -linear` == "ft")
+		$unitConv = 304.8;
+	else if(`currentUnit -q -linear` == "yd")
+		$unitConv = 914.4;
+
+	//Store selection
+	string $sel[] = `ls -sl`;
+	string $shapeSel[] = `ls -shapes -dag $sel[0]`;
+	string $isoAttr = ($sel[0] + ".iso");
+
+	//Check
+
+
+	if(size(`ls -sl`)==0 || `nodeType $shapeSel[0]` != "camera" )
+		{
+            warning "No camera selected";
+		}
+		else
+		{
+        $fileprompt = `promptDialog -title ("ISO Lock") -text " (づ｡◕‿‿◕｡)づ apply magic ( ͡° ͜ʖ ͡°) " -message ("You are about to lock the ISO of "+$shapeSel[0]+"\n\nYou will still be able to change it via an .ISO attribute\n in the extra attributes your camera transform.\n\nThis expression uses the 'focus distance' of your cam.") -button "OK" -button "Cancel" -defaultButton "OK" -cancelButton "Cancel"`;
+    	if($fileprompt == "OK"){
+            	if(`attributeQuery -node $sel[0] -ex "iso"`)
+            		{
+            			connectAttr -f ($shapeSel[0] + ".toMxIso") ($shapeSel[0] + ".mxIso");
+            			string $sel[] = {""};
+            			string $shapeSel[] = {""};
+            		}
+            
+            	float $p = ((`getAttr ($shapeSel[0] + ".fd")`)*10)+(`getAttr ($shapeSel[0] + ".focalLength")`);
+            	float $f = (`getAttr ($shapeSel[0] + ".focalLength")`);
+            	float $pp = ($p*$f)/($p-$f);
+            
+            	float $isoOrig = (`getAttr ($shapeSel[0] + ".mxIso")` * 2) / pow($pp/$f,2);
+            
+            	//Create attributes
+            	addAttr -ln "iso" -nn "ISO" -at long -min 0 -max 25000 -dv $isoOrig -k 1 $sel[0];
+            	addAttr -ln "toMxIso" -nn "to Mx ISO" -at long -min 0 -max 25000 -dv $isoOrig -k 1 $shapeSel[0];
+            
+            	//Calculate Coef
+            	expression -s ("float $p = (fd*" + $unitConv + ")+focalLength;\nfloat $f = focalLength;\nfloat $pp = ($p*$f)/($p-$f);\ntoMxIso = " + $isoAttr + " * .5 * pow($pp/$f,2);") -o $shapeSel[0] -ae 1 -uc all;
+            
+            	connectAttr -f ($shapeSel[0] + ".toMxIso") ($shapeSel[0] + ".mxIso");
+            
+            	//Notes
+            	if(!`attributeQuery -node $sel[0] -ex "notes"`)
+            		addAttr -ln "notes" -sn "nts" -dt "string" $sel[0] ;
+            	setAttr -type "string" ($sel[0]+".notes") "This Iso attribute is auto-ajusted with the focal length and focus distance of the camera. You can kill it by breaking the connection to the .mxIso or run the script again to repair it.\n(e.g. For a focal of 35mm and distance of 85mm, the balance coef is 1)\n\nFor more info you can check \nleplusbeaumetier.voila.net/galerie/pages/i.html";
+            
+            	//-------------------
+        	}
+    }
+}

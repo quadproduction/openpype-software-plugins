@@ -1,0 +1,589 @@
+Group {
+ name k_pProjection
+ inputs 2
+ help "<center><b>k_pProjection</b>\n\nProject a 2d texture on a layer containing position data. </center>\n\n\n<left><i>&#169; Nicolas Gauthier  |  contact@niko-vfx.com</i></left>"
+ addUserKnob {20 k_pProjection}
+ addUserKnob {41 Pchannels l "Pworld channels" t "Select the World Position pass channels" T ShuffleInputP.in}
+ addUserKnob {41 Nchannels l "Nworld channels" t "Select the World Normal pass channels" T ShuffleInputN.in}
+ addUserKnob {41 "unpremult by" T UnpremultRGB.alpha}
+ addUserKnob {6 invertUnpremult l invert -STARTLINE}
+ addUserKnob {26 divMain l " " T " "}
+ addUserKnob {20 TabBegin l "" +STARTLINE n -2}
+ addUserKnob {20 SettingsTab l Settings}
+ addUserKnob {26 divSettings l " " T " "}
+ addUserKnob {26 divCam l "" +STARTLINE T " "}
+ addUserKnob {1 targetCam l camera -STARTLINE}
+ targetCam Camera1
+ addUserKnob {22 getCam l "get Camera" -STARTLINE T "\nimport nuke\nimport nukescripts\nclass ObjetPanel(nukescripts.PythonPanel):\n    def __init__(self, node):\n        nukescripts.PythonPanel.__init__(self, 'Select a Camera node')\n        self.objNode = node\n        nuke.root().begin()\n        sn = nuke.allNodes()\n        list = \[] \n        for n in sn:\n            if n != self.objNode:\n                if n.Class() == 'Camera' or n.Class() == 'Camera2':\n                    list.append(n.name())\n        if len(list)>0:\n            self.elementObject = nuke.Enumeration_Knob('Camera', 'Camera', list)\n            self.elementObject.clearFlag(nuke.STARTLINE)\n            self.addKnob(self.elementObject)\n        else:\n            self.text = nuke.Text_Knob('text','', '<img src=\":qrc/images/next.png\">  <b>There is no Camera node in you scene</b>')\n            self.addKnob(self.text)\n            self.text = nuke.Text_Knob('text','', ' ')\n            self.addKnob(self.text)\nnode=nuke.thisNode()\np= ObjetPanel(node)\nif p.showModalDialog():\n    try:\n        sel = p.elementObject.value()\n        node\['targetCam'].setValue(str(sel))\n    except:\n        pass\nelse:\n    pass\n"}
+ addUserKnob {26 divGetCam l "" -STARTLINE T "                                    "}
+ addUserKnob {26 divProj l " " T " "}
+ addUserKnob {26 divProjText l <b>Projection</b>}
+ addUserKnob {3 refFrame l "reference frame" +DISABLED}
+ refFrame 1001
+ addUserKnob {22 setFrame l "set to current frame" -STARTLINE +DISABLED T "\nnuke.thisGroup()\['refFrame'].setValue( nuke.frame() )\n"}
+ addUserKnob {26 divHoldFrame l "" -STARTLINE T " "}
+ addUserKnob {41 holdFrame l "hold frame" -STARTLINE T KnobHoldFrame.holdFrame}
+ addUserKnob {41 project_on l "project on" T KnobProjectOn.project_on}
+ addUserKnob {41 crop -STARTLINE T CropTex.crop}
+ addUserKnob {26 divOutputNul l " " T " "}
+ addUserKnob {26 divOutputText l <b>Output</b>}
+ addUserKnob {68 outputMode l output M {"warped tex" st-map}}
+ addUserKnob {41 channels T STMap.channels}
+ addUserKnob {41 imageFilter l filter T STMap.filter}
+ addUserKnob {20 RangeTab l Zrange}
+ addUserKnob {26 divRange l " " T " "}
+ addUserKnob {41 useZrange l "use zrange" T KnobZfalloff.useZfalloff}
+ addUserKnob {41 zfalloff -STARTLINE T KnobZfalloff.range}
+ addUserKnob {20 falloffGrpBegin l ... n 2}
+ addUserKnob {12 A_nearFalloff l "A " +DISABLED}
+ A_nearFalloff {100 100}
+ addUserKnob {22 sampleA l "<img src=\":qrc/images/Eyedropper.png\" width=12 height=12>" -STARTLINE +DISABLED T "\nn = nuke.thisGroup()\nsn = nuke.toNode('SamplerZ')\nwith n:\n    if sn.input(0)!=None:\n        pChannels = nuke.Layer('rgb').channels()\n        if int(len(pChannels))<3:\n            nuke.message('Please select a position layer first.')\n        else:\n            input = sn.input(0)\n            positionXY = n\['A_nearFalloff'].value()\n            pX = positionXY\[0]\n            pY = positionXY\[-1]\n            pB = input.sample(pChannels\[2], pX, pY)\n            n.knob('zfalloff').setValue(abs(pB),0)\n    else:\n        pass\n"}
+ addUserKnob {26 spacerSamplerA l "   " -STARTLINE T " "}
+ addUserKnob {12 B_nearClip l "B " -STARTLINE +DISABLED}
+ B_nearClip {100 200}
+ addUserKnob {22 sampleB l "<img src=\":qrc/images/Eyedropper.png\" width=12 height=12>" -STARTLINE +DISABLED T "\nn = nuke.thisGroup()\nsn = nuke.toNode('SamplerZ')\nwith n:\n    if sn.input(0)!=None:\n        pChannels = nuke.Layer('rgb').channels()\n        if int(len(pChannels))<3:\n            nuke.message('Please select a position layer first.')\n        else:\n            input = sn.input(0)\n            positionXY = n\['B_nearClip'].value()\n            pX = positionXY\[0]\n            pY = positionXY\[-1]\n            pB = input.sample(pChannels\[2], pX, pY)\n            n.knob('zfalloff').setValue(abs(pB),1)\n    else:\n        pass\n"}
+ addUserKnob {12 C_farClip l "C " +DISABLED}
+ C_farClip {100 500}
+ addUserKnob {22 sampleC l "<img src=\":qrc/images/Eyedropper.png\" width=12 height=12>" -STARTLINE +DISABLED T "\nn = nuke.thisGroup()\nsn = nuke.toNode('SamplerZ')\nwith n:\n    if sn.input(0)!=None:\n        pChannels = nuke.Layer('rgb').channels()\n        if int(len(pChannels))<3:\n            nuke.message('Please select a position layer first.')\n        else:\n            input = sn.input(0)\n            positionXY = n\['C_farClip'].value()\n            pX = positionXY\[0]\n            pY = positionXY\[-1]\n            pB = input.sample(pChannels\[2], pX, pY)\n            n.knob('zfalloff').setValue(abs(pB),2)\n    else:\n        pass\n"}
+ addUserKnob {26 spacerSamplerD l "   " -STARTLINE T " "}
+ addUserKnob {12 D_farFalloff l "D " -STARTLINE +DISABLED}
+ D_farFalloff {100 600}
+ addUserKnob {22 sampleD l "<img src=\":qrc/images/Eyedropper.png\" width=12 height=12>" -STARTLINE +DISABLED T "\nn = nuke.thisGroup()\nsn = nuke.toNode('SamplerZ')\nwith n:\n    if sn.input(0)!=None:\n        pChannels = nuke.Layer('rgb').channels()\n        if int(len(pChannels))<3:\n            nuke.message('Please select a position layer first.')\n        else:\n            input = sn.input(0)\n            positionXY = n\['D_farFalloff'].value()\n            pX = positionXY\[0]\n            pY = positionXY\[-1]\n            pB = input.sample(pChannels\[2], pX, pY)\n            n.knob('zfalloff').setValue(abs(pB),3)\n    else:\n        pass\n"}
+ addUserKnob {20 falloffGrpEnd l "" +STARTLINE n -1}
+ addUserKnob {20 PreviewTab l Preview}
+ addUserKnob {26 divPreviewTab l " " T " "}
+ addUserKnob {22 previewOn l OFF T "\nfrom __future__ import with_statement\nng = nuke.thisGroup()\nngKnobs = \{\}\ninputName = 'Look'\nwith ng :\n    ng\['switchPreview'].setValue(False)\n    enabledKnobs=\['preview','pointDetail','pointSize']\n    if ng\['preview'].value()=='Matte overlay':\n        enabledKnobs.append('color2d')\n    for ks in enabledKnobs:\n        ng.knobs()\[str(ks)].setEnabled(True)\n    ngKnobs.update(\{'VisibleOn':\['previewOff'],'VisibleOff':\['previewOn'],\})\n    for k, v in ngKnobs.iteritems():\n        for ks in v:\n            if k == \"VisibleOn\":\n                ng.knobs()\[str(ks)].setVisible(True)\n            elif k == \"VisibleOff\":\n                ng.knobs()\[str(ks)].setVisible(False)\n    ng\[\"indicatorPreview\"].setValue(\"<font size=1><font color=LawnGreen><b>&#8759;</b>\")\n" +STARTLINE}
+ addUserKnob {22 previewOff l ON -STARTLINE +HIDDEN T "\nfrom __future__ import with_statement\nng = nuke.thisGroup()\nngKnobs = \{\}\ninputName = 'Look'\nwith ng :\n    ng\['switchPreview'].setValue(True)\n    ngKnobs.update(\{'Enabled':\['preview','color2d','pointDetail','pointSize'],'VisibleOn':\['previewOn'],'VisibleOff':\['previewOff'],\})\n    for k, v in ngKnobs.iteritems():\n        for ks in v:\n            if k == \"Enabled\":\n                ng.knobs()\[str(ks)].setEnabled(False)\n            elif k == \"VisibleOn\":\n                ng.knobs()\[str(ks)].setVisible(True)\n            elif k == \"VisibleOff\":\n                ng.knobs()\[str(ks)].setVisible(False)\n    ng\[\"indicatorPreview\"].setValue(\"<font size=1><font color=Red><b>&#8759;</b>\")\n"}
+ addUserKnob {26 indicatorPreview l " " -STARTLINE T "<font size=1><font color=Red><b>&#8759;</b>"}
+ addUserKnob {6 switchPreview l "" -STARTLINE +HIDDEN}
+ switchPreview true
+ addUserKnob {26 divPreviewParam l "" +STARTLINE}
+ addUserKnob {41 preview l "pointcloud preview" t "Choose how you want to see the projection on a pointcloud" +DISABLED T KnobPreviewPC.preview}
+ addUserKnob {26 divColorPreview l "" +STARTLINE}
+ addUserKnob {18 color2d l "matte overlay color" +DISABLED}
+ color2d {1 1 1}
+ addUserKnob {6 color2d_panelDropped l "panel dropped state" -STARTLINE +HIDDEN}
+ addUserKnob {26 divPoint l "" +STARTLINE}
+ addUserKnob {7 pointDetail l "point detail" +DISABLED}
+ pointDetail 0.1
+ addUserKnob {7 pointSize l "point size" +DISABLED R 0 10}
+ pointSize 5
+ addUserKnob {26 divSettingsEnd l " " T " "}
+ addUserKnob {20 TabEnd l "" +STARTLINE n -3}
+ addUserKnob {26 divOutput l "" +STARTLINE T " "}
+ addUserKnob {41 "premult by" T PremultRGB.alpha}
+ addUserKnob {6 invertPremult l invert -STARTLINE}
+ addUserKnob {26 spacerBlackOutside l " " -STARTLINE T "     "}
+ addUserKnob {6 black_outside l "black outside" t "Force everything outside that alpha channel to stay black" -STARTLINE}
+ black_outside true
+}
+ Camera2 {
+  inputs 0
+  useMatrix true
+  matrix {
+      {{"\[expr \{\[exists \[value targetCam]] ? \"parent.holdFrame ? (\[value targetCam].world_matrix(parent.refFrame)) : (\[value targetCam].world_matrix)\": 1\}]"} {"\[expr \{\[exists \[value targetCam]] ? \"parent.holdFrame ? (\[value targetCam].world_matrix(parent.refFrame)) : (\[value targetCam].world_matrix)\": 0\}]"} {"\[expr \{\[exists \[value targetCam]] ? \"parent.holdFrame ? (\[value targetCam].world_matrix(parent.refFrame)) : (\[value targetCam].world_matrix)\": 0\}]"} {"\[expr \{\[exists \[value targetCam]] ? \"parent.holdFrame ? (\[value targetCam].world_matrix(parent.refFrame)) : (\[value targetCam].world_matrix)\": 0\}]"}}
+      {{"\[expr \{\[exists \[value targetCam]] ? \"parent.holdFrame ? (\[value targetCam].world_matrix(parent.refFrame)) : (\[value targetCam].world_matrix)\": 0\}]"} {"\[expr \{\[exists \[value targetCam]] ? \"parent.holdFrame ? (\[value targetCam].world_matrix(parent.refFrame)) : (\[value targetCam].world_matrix)\": 1\}]"} {"\[expr \{\[exists \[value targetCam]] ? \"parent.holdFrame ? (\[value targetCam].world_matrix(parent.refFrame)) : (\[value targetCam].world_matrix)\": 0\}]"} {"\[expr \{\[exists \[value targetCam]] ? \"parent.holdFrame ? (\[value targetCam].world_matrix(parent.refFrame)) : (\[value targetCam].world_matrix)\": 0\}]"}}
+      {{"\[expr \{\[exists \[value targetCam]] ? \"parent.holdFrame ? (\[value targetCam].world_matrix(parent.refFrame)) : (\[value targetCam].world_matrix)\": 0\}]"} {"\[expr \{\[exists \[value targetCam]] ? \"parent.holdFrame ? (\[value targetCam].world_matrix(parent.refFrame)) : (\[value targetCam].world_matrix)\": 0\}]"} {"\[expr \{\[exists \[value targetCam]] ? \"parent.holdFrame ? (\[value targetCam].world_matrix(parent.refFrame)) : (\[value targetCam].world_matrix)\": 1\}]"} {"\[expr \{\[exists \[value targetCam]] ? \"parent.holdFrame ? (\[value targetCam].world_matrix(parent.refFrame)) : (\[value targetCam].world_matrix)\": 0\}]"}}
+      {{"\[expr \{\[exists \[value targetCam]] ? \"parent.holdFrame ? (\[value targetCam].world_matrix(parent.refFrame)) : (\[value targetCam].world_matrix)\": 0\}]"} {"\[expr \{\[exists \[value targetCam]] ? \"parent.holdFrame ? (\[value targetCam].world_matrix(parent.refFrame)) : (\[value targetCam].world_matrix)\": 0\}]"} {"\[expr \{\[exists \[value targetCam]] ? \"parent.holdFrame ? (\[value targetCam].world_matrix(parent.refFrame)) : (\[value targetCam].world_matrix)\": 0\}]"} {"\[expr \{\[exists \[value targetCam]] ? \"parent.holdFrame ? (\[value targetCam].world_matrix(parent.refFrame)) : (\[value targetCam].world_matrix)\": 1\}]"}}
+    }
+  projection_mode {{"\[expr \{\[exists \[value targetCam]]?\" parent.holdFrame ? (\[value targetCam].projection_mode(parent.refFrame)) : (\[value targetCam].projection_mode)\" : 0\}]"}}
+  focal {{"\[expr \{\[exists \[value targetCam]]?\" parent.holdFrame ? (\[value targetCam].focal(parent.refFrame)) : (\[value targetCam].focal)\" : 50\}]"}}
+  haperture {{"\[expr \{\[exists \[value targetCam]]?\" parent.holdFrame ? (\[value targetCam].haperture(parent.refFrame)) : (\[value targetCam].haperture)\" : 24.576\}]"}}
+  vaperture {{"\[expr \{\[exists \[value targetCam]]?\" parent.holdFrame ? (\[value targetCam].vaperture(parent.refFrame)) : (\[value targetCam].vaperture)\" : 18.672\}]"}}
+  near {{"\[expr \{\[exists \[value targetCam]]?\" parent.holdFrame ? (\[value targetCam].near(parent.refFrame)) : (\[value targetCam].near)\": 0.1\}]"}}
+  far {{"\[expr \{\[exists \[value targetCam]]?\" parent.holdFrame ? (\[value targetCam].far(parent.refFrame)) : (\[value targetCam].far)\" : 10000\}]"}}
+  win_translate {{"\[expr \{\[exists \[value targetCam]]?\" parent.holdFrame ? (\[value targetCam].win_translate.u(parent.refFrame)) : (\[value targetCam].win_translate.u)\" : 0\}]"} {"\[expr \{\[exists \[value targetCam]]?\" parent.holdFrame ? (\[value targetCam].win_translate.v(parent.refFrame)) : (\[value targetCam].win_translate.v)\" : 0\}]"}}
+  win_scale {{"\[expr \{\[exists \[value targetCam]]?\" parent.holdFrame ? (\[value targetCam].win_scale.u(parent.refFrame)) : (\[value targetCam].win_scale.u)\" : 1\}]"} {"\[expr \{\[exists \[value targetCam]]?\" parent.holdFrame ? (\[value targetCam].win_scale.v(parent.refFrame)) : (\[value targetCam].win_scale.v)\" : 1\}]"}}
+  winroll {{"\[expr \{\[exists \[value targetCam]]?\" parent.holdFrame ? (\[value targetCam].winroll(parent.refFrame)) : (\[value targetCam].winroll)\":0\}]"}}
+  name CameraProj
+  xpos 900
+  ypos 600
+  hide_input true
+  disable {{parent.disable}}
+ }
+ Input {
+  inputs 0
+  name Input
+  xpos 0
+  number 1
+ }
+ Dot {
+  name bDot1
+  xpos 34
+  ypos 150
+ }
+ AddChannels {
+  channels alpha
+  name AddChannel
+  xpos 0
+  ypos 200
+ }
+ Unpremult {
+  channels all
+  alpha -rgba.alpha
+  invert {{parent.invertUnpremult}}
+  name UnpremultRGB
+  xpos 0
+  ypos 250
+  disable {{!alpha}}
+ }
+ Dot {
+  name bDot2
+  xpos 34
+  ypos 300
+ }
+set N64e19c00 [stack 0]
+ Dot {
+  name aDotN1
+  xpos 234
+  ypos 300
+ }
+set N64e19800 [stack 0]
+ Dot {
+  name aDotP1
+  xpos 834
+  ypos 300
+ }
+set N64e19400 [stack 0]
+ Shuffle {
+  in rgb
+  out rgb
+  name ShuffleInputP
+  xpos 800
+  ypos 350
+ }
+ Dot {
+  name aDotP2
+  xpos 834
+  ypos 450
+ }
+set N64e18c00 [stack 0]
+ Expression {
+  temp_name0 Dx
+  temp_expr0 r-CameraProj.world_matrix.3
+  temp_name1 Dy
+  temp_expr1 g-CameraProj.world_matrix.7
+  temp_name2 Dz
+  temp_expr2 b-CameraProj.world_matrix.11
+  expr0 Dx
+  expr1 Dy
+  expr2 Dz
+  name TransPP
+  xpos 800
+  ypos 600
+ }
+ ColorMatrix {
+  matrix {
+      {{CameraProj.world_matrix.0} {CameraProj.world_matrix.1} {CameraProj.world_matrix.2}}
+      {{CameraProj.world_matrix.4} {CameraProj.world_matrix.5} {CameraProj.world_matrix.6}}
+      {{CameraProj.world_matrix.8} {CameraProj.world_matrix.9} {CameraProj.world_matrix.10}}
+    }
+  invert true
+  name RotScaleP
+  xpos 800
+  ypos 650
+  disable {{"\[value error]"}}
+ }
+ Dot {
+  name aDotP3
+  xpos 834
+  ypos 700
+ }
+set N64e18000 [stack 0]
+ Dot {
+  name aDotZ1
+  xpos 334
+  ypos 700
+ }
+set N64f25c00 [stack 0]
+ NoOp {
+  name SamplerZ
+  xpos 300
+  ypos 650
+ }
+push $N64e19c00
+ Dot {
+  name bDot3
+  xpos 34
+  ypos 450
+ }
+ Dot {
+  name bDot4
+  xpos 34
+  ypos 1158
+ }
+set N64f25000 [stack 0]
+ Premult {
+  channels all
+  alpha -rgba.alpha
+  invert {{parent.invertPremult}}
+  name PremultRGB
+  xpos 0
+  ypos 1200
+  disable {{!alpha}}
+ }
+push $N64e18c00
+ Dot {
+  name eDot1
+  xpos 1134
+  ypos 450
+ }
+set N64f24800 [stack 0]
+push $N64f25000
+push $N64f25000
+ Copy {
+  inputs 2
+  from0 {{{parent.PremultRGB.alpha}}}
+  to0 rgba.alpha
+  name CpChpremult
+  xpos 200
+  ypos 1150
+  disable {{parent.PremultRGB.disable}}
+ }
+ Invert {
+  channels alpha
+  name InvertAlpha
+  xpos 300
+  ypos 1150
+  disable {{"!parent.invertPremult || parent.PremultRGB.disable"}}
+ }
+ Expression {
+  expr3 "parent.black_outside && a ==0.0 ? 0 : 1"
+  name OutsideAlpha
+  xpos 400
+  ypos 1150
+  disable {{"!parent.black_outside || !parent.PremultRGB.disable"}}
+ }
+push $N64e19800
+ Shuffle {
+  in rgb
+  out rgb
+  name ShuffleInputN
+  xpos 200
+  ypos 350
+ }
+ Dot {
+  name aDotN2
+  xpos 234
+  ypos 450
+ }
+ ColorMatrix {
+  matrix {
+      {{CameraProj.world_matrix.0} {CameraProj.world_matrix.1} {CameraProj.world_matrix.2}}
+      {{CameraProj.world_matrix.4} {CameraProj.world_matrix.5} {CameraProj.world_matrix.6}}
+      {{CameraProj.world_matrix.8} {CameraProj.world_matrix.9} {CameraProj.world_matrix.10}}
+    }
+  invert true
+  name RotScaleN
+  xpos 200
+  ypos 650
+  disable {{"\[value error]"}}
+ }
+ Expression {
+  expr0 0
+  expr1 0
+  expr2 0
+  expr3 b
+  name UpZ
+  xpos 200
+  ypos 750
+ }
+ Grade {
+  channels alpha
+  blackpoint -0.01
+  whitepoint 0.01
+  white_clamp true
+  name FeatherFB
+  xpos 200
+  ypos 800
+ }
+ Dot {
+  name aDotN3
+  xpos 234
+  ypos 1108
+ }
+push $N64f25c00
+ Expression {
+  expr3 "abs(b) < parent.zfalloff.0 || abs(b) > parent.zfalloff.3 ? 0 : abs(b) < parent.zfalloff.1 ? clamp( ( abs(b) - parent.zfalloff.0 ) / ( parent.zfalloff.1 - parent.zfalloff.0 ) ) : abs(b) > parent.zfalloff.2 ? clamp( 1 - ( abs(b) - parent.zfalloff.2 ) / ( parent.zfalloff.3 - parent.zfalloff.2 ) ) : 1"
+  name Zfalloff
+  xpos 300
+  ypos 750
+ }
+ Dot {
+  name aDotZ2
+  xpos 334
+  ypos 1058
+ }
+push $N64e18000
+ Expression {
+  temp_name0 haperture
+  temp_expr0 CameraProj.haperture
+  temp_name1 vaperture
+  temp_expr1 CameraProj.vaperture
+  temp_name2 hratio
+  temp_expr2 (haperture/CameraProj.focal)
+  temp_name3 vratio
+  temp_expr3 (vaperture/CameraProj.focal)
+  expr0 ((r/hratio)/-b)-CameraProj.win_translate.u*.5
+  expr1 (((g/vratio)/-b)/(haperture/vaperture))-CameraProj.win_translate.v*.5
+  expr2 b
+  name WinTransP
+  xpos 800
+  ypos 750
+ }
+ ColorMatrix {
+  matrix {
+      {{1/CameraProj.win_scale.u} 0 0}
+      {0 {1/CameraProj.win_scale.v} 0}
+      {0 0 0}
+    }
+  name WinScaleP
+  xpos 800
+  ypos 800
+  disable {{"\[value error]"}}
+ }
+ ColorMatrix {
+  matrix {
+      {{cos(radians(CameraProj.winroll))} {-sin(radians(CameraProj.winroll))} 0}
+      {{sin(radians(CameraProj.winroll))} {cos(radians(CameraProj.winroll))} 0}
+      {0 0 0}
+    }
+  name WinRollP
+  xpos 800
+  ypos 850
+  disable {{"\[value error]"}}
+ }
+ Expression {
+  temp_name0 hformat
+  temp_expr0 Tex.format.height
+  temp_name1 wformat
+  temp_expr1 Tex.format.width
+  temp_name2 pxformat
+  temp_expr2 Tex.format.pixel_aspect
+  temp_name3 result
+  temp_expr3 (wformat/(hformat/pxformat))
+  expr0 r+.5
+  expr1 g*result+.5
+  expr2 +.5
+  name UVMap
+  xpos 800
+  ypos 900
+ }
+ Dot {
+  name aDotUV
+  xpos 834
+  ypos 958
+ }
+set N650a0800 [stack 0]
+ Input {
+  inputs 0
+  name Tex
+  xpos 500
+  ypos 800
+ }
+ AddChannels {
+  channels alpha
+  name AddChannelTex
+  xpos 500
+  ypos 850
+ }
+ Crop {
+  box {0 0 {input.width} {input.height}}
+  name CropTex
+  xpos 500
+  ypos 900
+ }
+ STMap {
+  inputs 2
+  channels rgba
+  uv rgb
+  blur rgba.alpha
+  blur_scale 0
+  filter Mitchell
+  name STMap
+  xpos 500
+  ypos 950
+ }
+ Multiply {
+  inputs 1+1
+  value 0
+  invert_mask true
+  name ZfalloffMult
+  xpos 500
+  ypos 1050
+  disable {{!parent.useZrange}}
+ }
+ Multiply {
+  inputs 1+1
+  value 0
+  invert_mask {{"parent.project_on == 1"}}
+  name ProjOnFB
+  xpos 500
+  ypos 1100
+  disable {{!parent.project_on}}
+ }
+ Merge2 {
+  inputs 2
+  operation mask
+  name PremultAlpha
+  xpos 500
+  ypos 1150
+  disable {{"parent.PremultRGB.disable && !parent.black_outside"}}
+ }
+ Dot {
+  name bDotProjOut
+  xpos 534
+  ypos 1258
+ }
+set N65122800 [stack 0]
+ Shuffle {
+  in alpha
+  name AlphaShuffle
+  xpos 1000
+  ypos 150
+  hide_input true
+  disable {{parent.disable==1?1:parent.switchPreview==1?1:parent.preview==2?0:1}}
+ }
+ Multiply {
+  channels rgb
+  value {{parent.color2d} {parent.color2d} {parent.color2d} 1}
+  unpremult rgba.alpha
+  name RGBpreview2d
+  xpos 1000
+  ypos 200
+  disable {{parent.disable==1?1:parent.switchPreview==1?1:parent.preview==2||parent.preview==3?0:1}}
+ }
+ Expression {
+  expr3 1
+  name RGBpreview
+  xpos 1000
+  ypos 250
+  disable {{parent.disable==1?1:parent.switchPreview==1?1:parent.preview==1||parent.preview==3?0:1}}
+ }
+push $N64e19400
+ Merge2 {
+  inputs 2
+  bbox B
+  output rgb
+  name AlphaPreview
+  xpos 1000
+  ypos 300
+  disable {{parent.disable==1?1:parent.switchPreview==1?1:!parent.preview}}
+ }
+ PositionToPoints2 {
+  inputs 2
+  selectable false
+  render_mode off
+  cast_shadow false
+  receive_shadow false
+  detail {{parent.pointDetail}}
+  pointSize {{parent.pointSize}}
+  name PosToPoints
+  xpos 1100
+  ypos 300
+  disable {{parent.disable==1?1:parent.switchPreview==1?1:!parent.preview}}
+ }
+push 0
+ Scene {
+  inputs 2
+  selectable false
+  render_mode off
+  name SceneGeo
+  xpos 1310
+  ypos 280
+  disable {{parent.disable==1?1:parent.switchPreview==1?1:!parent.preview}}
+ }
+push $N64f24800
+ Remove {
+  name FormatGeo
+  xpos 1100
+  ypos 500
+  disable {{parent.disable==1?1:parent.switchPreview==1?1:!parent.preview}}
+ }
+ Dot {
+  name cDot2
+  xpos 1134
+  ypos 600
+ }
+ ScanlineRender {
+  inputs 2
+  ztest_enabled false
+  MB_channel none
+  name PreviewGeo
+  xpos 1300
+  ypos 600
+  disable {{parent.disable==1?1:parent.switchPreview==1?1:!parent.preview}}
+ }
+ Dot {
+  name eDot3dOut
+  xpos 1334
+  ypos 1464
+ }
+push $N650a0800
+ Dot {
+  name aDotSTMapOut
+  xpos 834
+  ypos 1358
+ }
+push $N65122800
+ Switch {
+  inputs 2
+  which {{parent.outputMode}}
+  name OutMode
+  xpos 500
+  ypos 1350
+ }
+ Copy {
+  inputs 2
+  name Preview3d
+  xpos 500
+  ypos 1450
+  disable {{parent.disable==1?1:parent.switchPreview==1?1:!parent.preview}}
+ }
+ Output {
+  name Output
+  xpos 500
+  ypos 1600
+ }
+ Dot {
+  inputs 0
+  name KnobPreviewPC
+  knobChanged "\nn = nuke.thisGroup()\nk = nuke.thisKnob()\nif k.name() == 'preview':\n    n\['color2d'].setEnabled( k.value() == 'Matte overlay' )\n"
+  xpos 0
+  hide_input true
+  addUserKnob {20 User}
+  addUserKnob {68 preview l "pointcloud preview" t "Choose the 2D / 3D if you want to see the shape of the matte with a point cloud" M {Off RGB "Matte overlay"}}
+ }
+ Dot {
+  inputs 0
+  name KnobHoldFrame
+  knobChanged "\nn = nuke.thisGroup()\nk = nuke.thisKnob()\nif k.name() == 'holdFrame':\n    n\['refFrame'].setEnabled( k.value() )\n    n\['setFrame'].setEnabled( k.value() )\n"
+  xpos 0
+  hide_input true
+  addUserKnob {20 User}
+  addUserKnob {6 holdFrame l "hold frame" +STARTLINE}
+ }
+ Dot {
+  inputs 0
+  name KnobProjectOn
+  knobChanged "\nn = nuke.thisGroup()\nk = nuke.thisKnob()\nwith n:\n    if k.name() == 'project_on':\n        if k.value() == 'both':\n            nuke.toNode('ShuffleInputN')\['in'].setEnabled(False)\n        else:\n            nuke.toNode('ShuffleInputN')\['in'].setEnabled(True)\n"
+  xpos 0
+  hide_input true
+  addUserKnob {20 User}
+  addUserKnob {68 project_on l "project on" M {both front back}}
+ }
+ Keyer {
+  inputs 0
+  input none
+  output none
+  range {0 1 999 1000}
+  name KnobZfalloff
+  knobChanged "\nn = nuke.thisGroup()\nk = nuke.thisKnob()\nif k.name() == 'useZfalloff':\n    n\['zfalloff'].setEnabled( k.value() )\n    n\['A_nearFalloff'].setEnabled( k.value() )\n    n\['B_nearClip'].setEnabled( k.value() )\n    n\['C_farClip'].setEnabled( k.value() )\n    n\['D_farFalloff'].setEnabled( k.value() )\n    n\['sampleA'].setEnabled( k.value() )\n    n\['sampleB'].setEnabled( k.value() )\n    n\['sampleC'].setEnabled( k.value() )\n    n\['sampleD'].setEnabled( k.value() )\n"
+  tile_color 0x353535ff
+  note_font_size 8
+  xpos 100
+  hide_input true
+  addUserKnob {20 User}
+  addUserKnob {6 useZfalloff l "use zrange" +STARTLINE}
+ }
+end_group

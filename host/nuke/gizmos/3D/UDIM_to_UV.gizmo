@@ -1,0 +1,52 @@
+#! /prod/softprod/apps/nuke/12.2v3/linux/libnuke-12.2.3.so -nx
+version 12.2 v3
+Gizmo {
+}
+ CheckerBoard2 {
+  inputs 0
+  name CheckerBoard1
+  xpos -286
+  ypos -280
+ }
+ Input {
+  inputs 0
+  name Input1
+  xpos -666
+  ypos -450
+ }
+ Dot {
+  name Source
+  label SOURCE
+  note_font "Bitstream Vera Sans Bold"
+  note_font_size 33
+  xpos -632
+  ypos -410
+ }
+set N178fa400 [stack 0]
+ UDIM_Project {
+  inputs 2
+  name UDIM_Project1
+  note_font Verdana
+  xpos -466
+  ypos -257
+  UdimsOffset_CheckMap true
+ }
+push $N178fa400
+add_layer {UV UV.red UV.green UV.blue}
+ ShuffleCopy {
+  inputs 2
+  red red
+  green green
+  blue blue
+  alpha black
+  out UV
+  name ShuffleCopy1
+  xpos -666
+  ypos -257
+ }
+ Output {
+  name Output1
+  xpos -666
+  ypos -157
+ }
+end_group
