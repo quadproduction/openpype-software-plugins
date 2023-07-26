@@ -1,0 +1,1 @@
+# openpype_software_plugins
