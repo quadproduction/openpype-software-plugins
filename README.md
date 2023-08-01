@@ -1,4 +1,4 @@
-# openpype_software_plugins
+# openpype-software-plugins
 
 ## Description
 
@@ -10,11 +10,11 @@ loaded into OpenPype with the correct settings configuration.
 ### Get the source code
 
 ```bash
-git clone https://github.com/quadproduction/openpype_software_plugins.git ~/openpype/openpype_software_plugins
+git clone https://github.com/quadproduction/openpype-software-plugins.git ~/openpype/openpype-software-plugins
 ```
 ### Setup OpenPype
 
-Open your openpype local settings and set `~/openpype/openpype_software_plugins` in **OPENPYPE_SOFTWARE_PLUGINS** (Environments section)
+Open your openpype local settings and set `~/openpype/openpype-software-plugins` in **openpype-software-plugins** (Environments section)
 
 ## Updating the code for production
 
