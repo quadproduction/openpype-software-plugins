@@ -31,7 +31,7 @@ def add_mel_folder_to_MAYA_SCRIPT_PATH(path: Path):
 
 if __name__ == "__main__":
 
-    print("#" * 10, f" Starting custom userSetup.py for openpype_software_plugins from {getenv('QUAD_PLUGIN_PATH')} ", "#" * 10)
+    print("#" * 10, f" Starting custom userSetup.py for openpype_software_plugins from {getenv('OPENPYPE_SOFTWARE_PLUGINS')} ", "#" * 10)
 
     python_folder = Path(getenv("OPENPYPE_SOFTWARE_PLUGINS")) / "host" / "maya" / "python"
     add_python_folder_to_path(python_folder)
@@ -39,4 +39,4 @@ if __name__ == "__main__":
     mel_folder = Path(getenv("OPENPYPE_SOFTWARE_PLUGINS")) / "host" / "maya" / "mel"
     add_mel_folder_to_MAYA_SCRIPT_PATH(mel_folder)
 
-    print("#" * 10, f" Finishing custom userSetup.py for openpype_software_plugins from {getenv('QUAD_PLUGIN_PATH')} ", "#" * 10)
+    print("#" * 10, f" Finishing custom userSetup.py for openpype_software_plugins from {getenv('OPENPYPE_SOFTWARE_PLUGINS')} ", "#" * 10)
