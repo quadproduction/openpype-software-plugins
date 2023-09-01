@@ -13,7 +13,7 @@ Y_OFFSET = 50
 def dDotParent():
 
     parentName = nuke.getInput('ParentName','')
-    parentKnob = nuke.Text_Knob('parent', 'parent')
+    parentKnob = nuke.Text_Knob('dparent', 'dparent')
 
     if parentName == None:
         return False
@@ -36,7 +36,7 @@ def dDotParent():
                 nuke.selectedNode().knob('name').setValue(parentName)
                 nuke.selectedNode().knob('tile_color').setValue(tileColor)
                 nuke.selectedNode().knob('note_font_size').setValue(fontSize)
-                if nuke.selectedNode().knob('parent'):
+                if nuke.selectedNode().knob('dparent'):
                     pass
                 else:
                     nuke.selectedNode().addKnob(parentKnob)
@@ -52,7 +52,7 @@ def dDotParent():
 def dDotConnect():
     dotList = []
     for node in nuke.allNodes('Dot'):
-        if node.knob('parent'):
+        if node.knob('dparent'):
             dotList.append(node.name())
 
     dotList.sort()
@@ -69,7 +69,7 @@ def dDotConnect():
 
     if len( selectedNodes ) !=0:
         for n in selectedNodes:
-            if  n.knob('parent'):
+            if  n.knob('dparent'):
                 pass
             elif n.Class() != 'Dot':
                 pass
@@ -86,7 +86,7 @@ def dDotConnect():
                 childKnob = nuke.Text_Knob('child', 'child')
                 if n.knob('child'):
                     pass
-                elif n.knob('parent'):
+                elif n.knob('dparent'):
                     pass
                 elif n.Class() != 'Dot':
                     pass
@@ -111,7 +111,7 @@ def dDotConnectSelected():
     parentName = selectedNodes[0]['name'].getValue()
 
     for n in children:
-        if  n.knob('parent'):
+        if  n.knob('dparent'):
             pass
         elif n.Class() != 'Dot':
             pass
@@ -127,7 +127,7 @@ def dDotConnectSelected():
             n.knob('note_font_color').setValue(parentColor)
         if n.knob('child'):
             pass
-        elif n.knob('parent'):
+        elif n.knob('dparent'):
             pass
         elif n.Class() != 'Dot':
             pass
@@ -202,7 +202,7 @@ def dDotRollDownNameChange():
      parentColor = selectedNode.knob('note_font_color').getValue()
      parentColor = int(parentColor)
      if selectedNode.Class() == 'Dot':
-        if selectedNode.knob('parent'):
+        if selectedNode.knob('dparent'):
             dependentNodes = selectedNode.dependent()
             for depnd in dependentNodes:
                 if depnd.knob('child'):
@@ -267,7 +267,7 @@ def dDotParentShuffle():
                     newDot.knob('name').setValue(input_name)
                     newDot.knob('tile_color').setValue(tileColor)
                     newDot.knob('note_font_size').setValue(fontSize)
-                    parent = nuke.Text_Knob('parent', 'parent')
+                    parent = nuke.Text_Knob('dparent', 'dparent')
                     newDot.addKnob(parent)
                     newDot.setInput(0, n)
                     i = i - 1
@@ -314,7 +314,7 @@ def dDotParentRead():
                     newDot.knob('name').setValue(input_name)
                     newDot.knob('tile_color').setValue(tileColor)
                     newDot.knob('note_font_size').setValue(fontSize)
-                    parent = nuke.Text_Knob('parent', 'parent')
+                    parent = nuke.Text_Knob('dparent', 'dparent')
                     newDot.addKnob(parent)
                     newDot.setInput(0, n)
                     i = i - 1
