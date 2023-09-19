@@ -5,6 +5,7 @@ import sys
 import subprocess
 import json
 import maya.mel as mel
+from maya import cmds
 
 def add_python_folder_to_path(path: Path):
     print(f"Adding {path} to sys.path")
