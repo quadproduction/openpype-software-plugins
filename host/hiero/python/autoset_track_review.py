@@ -14,12 +14,12 @@ def get_track_items():
     return track_items
 
 
-# Example usage
-track_items = get_track_items()
-for track_item in track_items:
-    track_name = track_item.parentTrack().name()
-    tags = track_item.tags()
-    for tag in tags:
-        metadata = tag.metadata()
-        if metadata.hasKey("reviewTrack"):
-            tag.metadata().setValue("tag.reviewTrack", track_name)
+def run():
+    track_items = get_track_items()
+    for track_item in track_items:
+        track_name = track_item.parentTrack().name()
+        tags = track_item.tags()
+        for tag in tags:
+            metadata = tag.metadata()
+            if metadata.hasKey("reviewTrack"):
+                tag.metadata().setValue("tag.reviewTrack", track_name)
