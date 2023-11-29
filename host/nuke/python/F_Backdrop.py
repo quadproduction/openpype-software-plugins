@@ -116,11 +116,8 @@ def autoBackdrop():
     size.setRange(10, 100)
     space1 = nuke.Text_Knob('S01', ' ', ' ')
     space2 = nuke.Text_Knob('S02', ' ', ' ')
-    icon_path = os.path.join(
-        os.environ['QUAD_PLUGIN_PATH'],
-        "host/nuke/icons/AutoBackdrop/"
-    )
-
+    script_dir = os.path.dirname(os.path.dirname(__file__))
+    icon_path = os.path.join(script_dir,  'icons/AutoBackdrop')
     grow = nuke.PyScript_Knob(
         'grow',
         '<img src="{}/F_scalep.png">'.format(icon_path),
