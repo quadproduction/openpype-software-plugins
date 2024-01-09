@@ -1,0 +1,59 @@
+[node fixBrushedMetalNormal]
+    maya.name               STRING  "fixBrushedMetalNormal"
+    maya.id                 INT      0x00010001
+    maya.classification     STRING  "utility/color"
+    maya.output_name        STRING  "outNormal"
+    maya.output_shortname   STRING  "out"
+    
+    [attr map_type]
+        min                 INT     0
+        max                 INT     2
+
+    [attr pattern_type]
+        min                 INT     0
+        max                 INT     2
+
+    [attr scale]
+        min                 FLOAT   0
+        softmax             FLOAT   1000
+
+    [attr slit_length_min]
+        min                 FLOAT   0
+        softmax             FLOAT   100
+
+    [attr slit_length_max]
+        min                 FLOAT   0
+        softmax             FLOAT   100
+    
+    [attr slit_depth_min]
+        min                 FLOAT   0
+        softmax             FLOAT   2
+    
+    [attr slit_depth_max]
+        min                 FLOAT   0
+        softmax             FLOAT   1
+    
+    [attr slit_width]
+        min                 FLOAT   0
+        max                 FLOAT   1
+
+    [attr noise_frequency]
+        min                 FLOAT   0
+        softmax             FLOAT   10
+
+    [attr noise_amplitude]
+        min                 FLOAT   0
+        softmax             FLOAT   1
+
+    [attr angle_randomness]
+        min                 FLOAT   0
+        max                 FLOAT   1
+
+    [attr layers]
+        min                 INT     1
+        softmax             INT     100
+
+    [attr slit_profile]
+        min                 INT     0
+        max                 INT     2
+ 
