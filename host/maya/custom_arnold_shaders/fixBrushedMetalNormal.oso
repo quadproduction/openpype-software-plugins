@@ -1,0 +1,591 @@
+OpenShadingLanguage 1.00
+# Compiled by oslc 1.12.0
+# options: -o /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.oso.2bf2-dd9a-9767-6ce3.tmp -I/prod/softprod/apps/arnold/mtoa/5.1.1/linux/maya-2020/plug-ins/../bin/../osl/include
+shader fixBrushedMetalNormal
+param	int	map_type	0		%meta{string,widget,"popup"} %meta{string,options,"Normal|Depth"}  %read{42,197} %write{2147483647,-1}
+param	int	pattern_type	0		%meta{string,widget,"popup"} %meta{string,options,"Linear|Circular"}  %read{0,130} %write{2147483647,-1}
+param	float	scale	500		%read{28,93} %write{2147483647,-1}
+param	float	slit_length_min	5		%read{89,91} %write{2147483647,-1}
+param	float	slit_length_max	5		%read{89,89} %write{2147483647,-1}
+param	float	slit_depth_min	0.5		%read{110,112} %write{2147483647,-1}
+param	float	slit_depth_max	0.5		%read{110,200} %write{2147483647,-1}
+param	float	slit_width	0.5		%read{134,179} %write{2147483647,-1}
+param	int	slit_profile	0		%meta{string,widget,"popup"} %meta{string,options,"Parabola|V-shape|Random"}  %read{137,170} %write{2147483647,-1}
+param	float	noise_frequency	1		%read{33,34} %write{2147483647,-1}
+param	float	noise_amplitude	0.100000001		%read{37,37} %write{2147483647,-1}
+param	float	angle_randomness	0		%read{65,65} %write{2147483647,-1}
+param	int	seed	0		%read{32,56} %write{2147483647,-1}
+param	int	layers	1		%read{55,57} %write{2147483647,-1}
+param	string	version	"1.1"		%read{2147483647,-1} %write{2147483647,-1}
+oparam	color	Cout	0.5 0.5 1		%read{2147483647,-1} %write{47,204}
+global	float	u	%read{8,204} %write{9,23}
+global	float	v	%read{10,29} %write{11,24}
+local	normal	___339_n	%read{56,204} %write{56,204}
+local	float	___341_frac	%read{56,204} %write{56,204}
+local	float	___341_dfdv	%read{56,204} %write{56,204}
+local	normal	___341_n	%read{56,204} %write{56,204}
+local	float	___342_frac	%read{56,204} %write{56,204}
+local	float	___343_rnd_angle	%read{56,204} %write{56,204}
+local	float	___345_r	%read{17,24} %write{15,15}
+local	float	___345_theta	%read{23,23} %write{16,16}
+local	float	___345_inv_r	%read{18,19} %write{17,17}
+local	float	___345_cosTheta	%read{21,22} %write{18,18}
+local	float	___345_sinTheta	%read{20,22} %write{19,19}
+local	vector	du	%read{56,204} %write{3,21}
+local	vector	dv	%read{56,204} %write{4,22}
+local	float	global_u	%read{33,204} %write{28,39}
+local	float	global_v	%read{34,204} %write{31,41}
+local	vector	perturbation	%read{38,40} %write{37,37}
+local	int	___349_layer_seed	%read{56,204} %write{55,204}
+local	float	___350_random_angle	%read{56,204} %write{56,204}
+local	float	___350_random_cos	%read{56,204} %write{56,204}
+local	float	___350_random_sin	%read{56,204} %write{56,204}
+local	float	___350_layer_v	%read{56,204} %write{56,204}
+local	float	___350_layer_u	%read{56,204} %write{56,204}
+local	vector	___350_layer_du	%read{56,204} %write{56,204}
+local	vector	___350_layer_dv	%read{56,204} %write{56,204}
+local	float	___350_rnd	%read{56,204} %write{56,204}
+local	float	___350_length_here	%read{56,204} %write{56,204}
+local	float	___350_period	%read{56,204} %write{56,204}
+local	float	___350_rnd_cells	%read{56,204} %write{56,204}
+local	float	___350_depth_here	%read{56,204} %write{56,204}
+local	float	___350_density	%read{56,204} %write{56,204}
+local	float	___351_slit_u	%read{2147483647,-1} %write{56,204}
+local	float	___351_slit_v	%read{56,204} %write{56,204}
+local	normal	___353_n	%read{56,204} %write{56,204}
+local	float	___353_d	%read{56,204} %write{56,204}
+const	int	$const1	0		%read{0,185} %write{2147483647,-1}
+temp	int	$tmp1	%read{1,1} %write{0,0}
+const	string	$const2	"transform_uvs_linear"		%read{2,2} %write{2147483647,-1}
+const	vector	$const3	1 0 0		%read{3,3} %write{2147483647,-1}
+const	vector	$const4	0 1 0		%read{4,4} %write{2147483647,-1}
+const	int	$const5	1		%read{5,204} %write{2147483647,-1}
+temp	int	$tmp2	%read{6,6} %write{5,5}
+const	string	$const6	"transform_uvs_circular"		%read{7,7} %write{2147483647,-1}
+const	int	$const7	2		%read{130,190} %write{2147483647,-1}
+temp	float	$tmp3	%read{9,9} %write{8,8}
+const	float	$const8	2		%read{8,141} %write{2147483647,-1}
+const	float	$const9	1		%read{9,201} %write{2147483647,-1}
+temp	float	$tmp4	%read{11,11} %write{10,10}
+temp	float	$tmp5	%read{14,14} %write{12,12}
+temp	float	$tmp6	%read{14,14} %write{13,13}
+temp	float	$tmp7	%read{15,15} %write{14,14}
+temp	float	$tmp8	%read{21,21} %write{20,20}
+const	float	$const10	0		%read{21,177} %write{2147483647,-1}
+const	float	$const11	6.28318548		%read{23,23} %write{2147483647,-1}
+temp	float	$tmp9	%read{27,27} %write{26,26}
+temp	float	$tmp10	%read{28,28} %write{27,27}
+temp	float	$tmp11	%read{30,30} %write{29,29}
+temp	float	$tmp12	%read{31,31} %write{30,30}
+temp	vector	$tmp13	%read{37,37} %write{36,36}
+const	string	$const12	"perlin"		%read{36,36} %write{2147483647,-1}
+temp	vector	$tmp14	%read{36,36} %write{35,35}
+temp	float	$tmp15	%read{35,35} %write{32,32}
+temp	float	$tmp16	%read{35,35} %write{33,33}
+temp	float	$tmp17	%read{35,35} %write{34,34}
+temp	float	$tmp18	%read{39,39} %write{38,38}
+temp	float	$tmp19	%read{41,41} %write{40,40}
+temp	int	$tmp20	%read{43,43} %write{42,42}
+const	normal	$const13	0 0 1		%read{45,45} %write{2147483647,-1}
+const	string	$const14	"normal_to_rgb"		%read{44,193} %write{2147483647,-1}
+const	float	$const15	0.5		%read{46,196} %write{2147483647,-1}
+temp	color	$tmp22	%read{46,46} %write{45,45}
+temp	color	$tmp23	%read{47,47} %write{46,46}
+temp	int	$tmp24	%read{49,49} %write{48,48}
+const	string	$const16	"depth_to_rgb"		%read{50,199} %write{2147483647,-1}
+temp	float	$tmp25	%read{52,52} %write{51,51}
+temp	float	$tmp26	%read{53,53} %write{52,52}
+temp	int	$tmp27	%read{56,204} %write{56,204}
+temp	int	$tmp28	%read{56,204} %write{56,204}
+temp	int	$tmp29	%read{56,204} %write{56,204}
+temp	int	$tmp30	%read{54,204} %write{55,204}
+temp	float	$tmp31	%read{56,204} %write{56,204}
+temp	float	$tmp32	%read{56,204} %write{56,204}
+temp	float	$tmp33	%read{56,204} %write{56,204}
+temp	float	$tmp34	%read{56,204} %write{56,204}
+const	float	$const17	1.57079637		%read{64,64} %write{2147483647,-1}
+temp	float	$tmp35	%read{56,204} %write{56,204}
+temp	float	$tmp36	%read{56,204} %write{56,204}
+temp	float	$tmp37	%read{56,204} %write{56,204}
+temp	float	$tmp38	%read{56,204} %write{56,204}
+temp	float	$tmp39	%read{56,204} %write{56,204}
+temp	float	$tmp40	%read{56,204} %write{56,204}
+temp	vector	$tmp41	%read{56,204} %write{56,204}
+temp	vector	$tmp42	%read{56,204} %write{56,204}
+temp	float	$tmp43	%read{56,204} %write{56,204}
+temp	vector	$tmp44	%read{56,204} %write{56,204}
+temp	vector	$tmp45	%read{56,204} %write{56,204}
+temp	float	$tmp46	%read{56,204} %write{56,204}
+temp	float	$tmp47	%read{56,204} %write{56,204}
+temp	float	$tmp48	%read{56,204} %write{56,204}
+temp	point	$tmp49	%read{56,204} %write{56,204}
+temp	float	$tmp50	%read{56,204} %write{56,204}
+temp	float	$tmp51	%read{56,204} %write{56,204}
+temp	float	$tmp52	%read{56,204} %write{56,204}
+temp	float	$tmp53	%read{56,204} %write{56,204}
+temp	float	$tmp54	%read{56,204} %write{56,204}
+temp	float	$tmp55	%read{56,204} %write{56,204}
+temp	float	$tmp56	%read{56,204} %write{56,204}
+temp	float	$tmp57	%read{56,204} %write{56,204}
+const	string	$const18	"mod"		%read{99,123} %write{2147483647,-1}
+temp	float	$tmp58	%read{56,204} %write{56,204}
+temp	float	$tmp59	%read{56,204} %write{56,204}
+temp	float	$tmp60	%read{56,204} %write{56,204}
+temp	point	$tmp61	%read{56,204} %write{56,204}
+temp	float	$tmp62	%read{56,204} %write{56,204}
+temp	float	$tmp63	%read{56,204} %write{56,204}
+temp	point	$tmp64	%read{56,204} %write{56,204}
+temp	float	$tmp65	%read{56,204} %write{56,204}
+temp	float	$tmp66	%read{56,204} %write{56,204}
+temp	float	$tmp67	%read{56,204} %write{56,204}
+const	float	$const19	0.200000003		%read{113,113} %write{2147483647,-1}
+temp	int	$tmp68	%read{56,204} %write{56,204}
+temp	float	$tmp69	%read{56,204} %write{56,204}
+temp	float	$tmp70	%read{56,204} %write{56,204}
+temp	float	$tmp71	%read{56,204} %write{56,204}
+temp	float	$tmp72	%read{56,204} %write{56,204}
+temp	float	$tmp73	%read{56,204} %write{56,204}
+temp	float	$tmp74	%read{56,204} %write{56,204}
+temp	float	$tmp75	%read{56,204} %write{56,204}
+temp	float	$tmp76	%read{56,204} %write{56,204}
+temp	float	$tmp77	%read{56,204} %write{56,204}
+temp	float	$tmp78	%read{56,204} %write{56,204}
+temp	int	$tmp79	%read{56,204} %write{56,204}
+temp	float	$tmp80	%read{56,204} %write{56,204}
+temp	int	$tmp81	%read{56,204} %write{56,204}
+temp	int	$tmp82	%read{56,204} %write{56,204}
+const	string	$const20	"x2_slit_normal"		%read{139,139} %write{2147483647,-1}
+temp	float	$tmp83	%read{56,204} %write{56,204}
+temp	float	$tmp84	%read{56,204} %write{56,204}
+temp	float	$tmp85	%read{56,204} %write{56,204}
+const	string	$const21	"x2_slit_depth"		%read{148,178} %write{2147483647,-1}
+temp	float	$tmp86	%read{56,204} %write{56,204}
+temp	float	$tmp87	%read{56,204} %write{56,204}
+temp	int	$tmp88	%read{56,204} %write{56,204}
+const	string	$const22	"v_slit_normal"		%read{155,155} %write{2147483647,-1}
+temp	float	$tmp89	%read{56,204} %write{56,204}
+temp	int	$tmp90	%read{56,204} %write{56,204}
+temp	float	$tmp91	%read{56,204} %write{56,204}
+const	string	$const23	"v_slit_depth"		%read{165,165} %write{2147483647,-1}
+temp	float	$tmp92	%read{56,204} %write{56,204}
+temp	float	$tmp93	%read{56,204} %write{56,204}
+temp	float	$tmp94	%read{56,204} %write{56,204}
+temp	int	$tmp95	%read{56,204} %write{56,204}
+const	string	$const24	"random_slit_normal"		%read{172,172} %write{2147483647,-1}
+temp	float	$tmp96	%read{56,204} %write{56,204}
+const	float	$const25	3.14159274		%read{174,174} %write{2147483647,-1}
+temp	float	$tmp97	%read{56,204} %write{56,204}
+temp	float	$tmp98	%read{56,204} %write{56,204}
+temp	float	$tmp99	%read{56,204} %write{56,204}
+temp	float	$tmp100	%read{56,204} %write{56,204}
+temp	int	$tmp101	%read{56,204} %write{56,204}
+temp	float	$tmp102	%read{56,204} %write{56,204}
+temp	vector	$tmp103	%read{56,204} %write{56,204}
+temp	float	$tmp104	%read{56,204} %write{56,204}
+temp	vector	$tmp105	%read{56,204} %write{56,204}
+temp	vector	$tmp106	%read{56,204} %write{56,204}
+temp	float	$tmp107	%read{56,204} %write{56,204}
+const	vector	$const26	0 0 1		%read{191,191} %write{2147483647,-1}
+temp	vector	$tmp109	%read{56,204} %write{56,204}
+temp	vector	$tmp110	%read{56,204} %write{56,204}
+temp	color	$tmp111	%read{56,204} %write{56,204}
+temp	color	$tmp112	%read{56,204} %write{56,204}
+temp	int	$tmp113	%read{56,204} %write{56,204}
+temp	float	$tmp114	%read{56,204} %write{56,204}
+temp	float	$tmp115	%read{56,204} %write{56,204}
+temp	int	$tmp116	%read{2147483647,-1} %write{56,204}
+code ___main___
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:132
+#     if (pattern_type == 0) {
+	eq		$tmp1 pattern_type $const1 	%filename{"/prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl"} %line{132} %argrw{"wrr"}
+	if		$tmp1 5 26 	%argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:133
+#         transform_uvs_linear(u, v, du, dv);
+	functioncall	$const2 5 	%line{133} %argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:87
+#     du = vector(1, 0, 0);
+	assign		du $const3 	%line{87} %argrw{"wr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:88
+#     dv = vector(0, 1, 0);
+	assign		dv $const4 	%line{88} %argrw{"wr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:134
+#     } else if (pattern_type == 1) {
+	eq		$tmp2 pattern_type $const5 	%line{134} %argrw{"wrr"}
+	if		$tmp2 25 26 	%argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:135
+#         transform_uvs_circular(u, v, du, dv);
+	functioncall	$const6 25 	%line{135} %argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:96
+#     u = 2 * u - 1;
+	mul		$tmp3 $const8 u 	%line{96} %argrw{"wrr"}
+	sub		u $tmp3 $const9 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:97
+#     v = 2 * v - 1;
+	mul		$tmp4 $const8 v 	%line{97} %argrw{"wrr"}
+	sub		v $tmp4 $const9 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:98
+#     float r = sqrt(u * u + v * v);
+	mul		$tmp5 u u 	%line{98} %argrw{"wrr"}
+	mul		$tmp6 v v 	%argrw{"wrr"}
+	add		$tmp7 $tmp5 $tmp6 	%argrw{"wrr"}
+	sqrt		___345_r $tmp7 	%argrw{"wr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:99
+#     float theta = atan2(v, u);
+	atan2		___345_theta v u 	%line{99} %argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:100
+#     float inv_r = 1 /  r;
+	div		___345_inv_r $const9 ___345_r 	%line{100} %argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:101
+#     float cosTheta = u * inv_r;
+	mul		___345_cosTheta u ___345_inv_r 	%line{101} %argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:102
+#     float sinTheta = v * inv_r;
+	mul		___345_sinTheta v ___345_inv_r 	%line{102} %argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:104
+#     du = vector(-sinTheta, cosTheta, 0);
+	neg		$tmp8 ___345_sinTheta 	%line{104} %argrw{"wr"}
+	vector		du $tmp8 ___345_cosTheta $const10 	%argrw{"wrrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:105
+#     dv = vector(cosTheta, sinTheta, 0);
+	vector		dv ___345_cosTheta ___345_sinTheta $const10 	%line{105} %argrw{"wrrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:107
+#     u = theta / M_2PI;
+	div		u ___345_theta $const11 	%line{107} %argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:108
+#     v = r;
+	assign		v ___345_r 	%line{108} %argrw{"wr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:137
+#         return;
+	exit	%line{137}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:141
+#     float global_u = scale * (2 * u - 1);
+	mul		$tmp9 $const8 u 	%line{141} %argrw{"wrr"}
+	sub		$tmp10 $tmp9 $const9 	%argrw{"wrr"}
+	mul		global_u scale $tmp10 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:142
+#     float global_v = scale * (2 * v - 1);
+	mul		$tmp11 $const8 v 	%line{142} %argrw{"wrr"}
+	sub		$tmp12 $tmp11 $const9 	%argrw{"wrr"}
+	mul		global_v scale $tmp12 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:146
+#         noise("perlin", vector(seed,
+	assign		$tmp15 seed 	%line{146} %argrw{"wr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:147
+#                                global_u * noise_frequency,
+	mul		$tmp16 global_u noise_frequency 	%line{147} %argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:148
+#                                global_v * noise_frequency));
+	mul		$tmp17 global_v noise_frequency 	%line{148} %argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:146
+#         noise("perlin", vector(seed,
+	vector		$tmp14 $tmp15 $tmp16 $tmp17 	%line{146} %argrw{"wrrr"}
+	noise		$tmp13 $const12 $tmp14 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:145
+#     vector perturbation = noise_amplitude *
+	mul		perturbation noise_amplitude $tmp13 	%line{145} %argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:150
+#     global_u += perturbation[0];
+	compref		$tmp18 perturbation $const1 	%line{150} %argrw{"wrr"}
+	add		global_u global_u $tmp18 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:151
+#     global_v += perturbation[1];
+	compref		$tmp19 perturbation $const5 	%line{151} %argrw{"wrr"}
+	add		global_v global_v $tmp19 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:153
+#     if (map_type == 0)
+	eq		$tmp20 map_type $const1 	%line{153} %argrw{"wrr"}
+	if		$tmp20 48 54 	%argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:154
+#         Cout = normal_to_rgb(normal(0, 0, 1));
+	functioncall	$const14 48 	%line{154} %argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:14
+#     return .5 + .5 * color(n);
+	assign		$tmp22 $const13 	%line{14} %argrw{"wr"}
+	mul		$tmp23 $const15 $tmp22 	%argrw{"wrr"}
+	add		Cout $const15 $tmp23 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:155
+#     else if (map_type == 1)
+	eq		$tmp24 map_type $const5 	%line{155} %argrw{"wrr"}
+	if		$tmp24 54 54 	%argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:156
+#         Cout = depth_to_rgb(0, 1);
+	functioncall	$const16 54 	%line{156} %argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:21
+#     return color(1 + d / depth_max);
+	div		$tmp25 $const10 $const9 	%line{21} %argrw{"wrr"}
+	add		$tmp26 $const9 $tmp25 	%argrw{"wrr"}
+	assign		Cout $tmp26 	%argrw{"wr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:160
+#     for (int layer_seed = seed * layers; layer_seed < (seed + 1) * layers; layer_seed++) {
+	for		$tmp30 56 60 203 205 	%line{160} %argrw{"r"}
+	mul		___349_layer_seed seed layers 	%argrw{"wrr"}
+	add		$tmp27 seed $const5 	%argrw{"wrr"}
+	mul		$tmp28 $tmp27 layers 	%argrw{"wrr"}
+	lt		$tmp29 ___349_layer_seed $tmp28 	%argrw{"wrr"}
+	neq		$tmp30 $tmp29 $const1 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:163
+#         float random_angle = (2 * cellnoise(layer_seed, 0) - 1) * M_PI_2 * angle_randomness;
+	assign		$tmp32 ___349_layer_seed 	%line{163} %argrw{"wr"}
+	cellnoise	$tmp31 $tmp32 $const10 	%argrw{"wrr"}
+	mul		$tmp33 $const8 $tmp31 	%argrw{"wrr"}
+	sub		$tmp34 $tmp33 $const9 	%argrw{"wrr"}
+	mul		$tmp35 $tmp34 $const17 	%argrw{"wrr"}
+	mul		___350_random_angle $tmp35 angle_randomness 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:164
+#         float random_cos = cos(random_angle);
+	cos		___350_random_cos ___350_random_angle 	%line{164} %argrw{"wr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:165
+#         float random_sin = sin(random_angle);
+	sin		___350_random_sin ___350_random_angle 	%line{165} %argrw{"wr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:167
+#         float layer_v = global_u * (-random_sin) + global_v * random_cos;
+	neg		$tmp36 ___350_random_sin 	%line{167} %argrw{"wr"}
+	mul		$tmp37 global_u $tmp36 	%argrw{"wrr"}
+	mul		$tmp38 global_v ___350_random_cos 	%argrw{"wrr"}
+	add		___350_layer_v $tmp37 $tmp38 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:168
+#         float layer_u = global_u * random_cos + global_v * random_sin;
+	mul		$tmp39 global_u ___350_random_cos 	%line{168} %argrw{"wrr"}
+	mul		$tmp40 global_v ___350_random_sin 	%argrw{"wrr"}
+	add		___350_layer_u $tmp39 $tmp40 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:170
+#         vector layer_du = du * random_cos + dv * random_sin;
+	mul		$tmp41 du ___350_random_cos 	%line{170} %argrw{"wrr"}
+	mul		$tmp42 dv ___350_random_sin 	%argrw{"wrr"}
+	add		___350_layer_du $tmp41 $tmp42 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:171
+#         vector layer_dv = du * (-random_sin) + dv * random_cos;
+	neg		$tmp43 ___350_random_sin 	%line{171} %argrw{"wr"}
+	mul		$tmp44 du $tmp43 	%argrw{"wrr"}
+	mul		$tmp45 dv ___350_random_cos 	%argrw{"wrr"}
+	add		___350_layer_dv $tmp44 $tmp45 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:174
+#         layer_v += scale * cellnoise(layer_seed, 1);
+	assign		$tmp47 ___349_layer_seed 	%line{174} %argrw{"wr"}
+	cellnoise	$tmp46 $tmp47 $const9 	%argrw{"wrr"}
+	mul		$tmp48 scale $tmp46 	%argrw{"wrr"}
+	add		___350_layer_v ___350_layer_v $tmp48 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:179
+#         float rnd = cellnoise(point(
+	assign		$tmp50 ___349_layer_seed 	%line{179} %argrw{"wr"}
+	point		$tmp49 $tmp50 ___350_layer_v $const10 	%argrw{"wrrr"}
+	cellnoise	___350_rnd $tmp49 	%argrw{"wr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:184
+#         float length_here = slit_length_min + rnd * (slit_length_max - slit_length_min);
+	sub		$tmp51 slit_length_max slit_length_min 	%line{184} %argrw{"wrr"}
+	mul		$tmp52 ___350_rnd $tmp51 	%argrw{"wrr"}
+	add		___350_length_here slit_length_min $tmp52 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:185
+#         layer_u /= length_here;
+	div		___350_layer_u ___350_layer_u ___350_length_here 	%line{185} %argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:190
+#         float period = 2 * scale / length_here; // the maximum value of layer_u, assuming u is in range[0, 1]
+	mul		$tmp53 $const8 scale 	%line{190} %argrw{"wrr"}
+	div		___350_period $tmp53 ___350_length_here 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:191
+#         layer_u = mod(layer_u + period * cellnoise(layer_seed, layer_v),
+	assign		$tmp55 ___349_layer_seed 	%line{191} %argrw{"wr"}
+	cellnoise	$tmp54 $tmp55 ___350_layer_v 	%argrw{"wrr"}
+	mul		$tmp56 ___350_period $tmp54 	%argrw{"wrr"}
+	add		$tmp57 ___350_layer_u $tmp56 	%argrw{"wrr"}
+	functioncall	$const18 104 	%argrw{"r"}
+# /prod/softprod/apps/arnold/mtoa/5.1.1/linux/maya-2020/plug-ins/../bin/../osl/include/stdosl.h:132
+# float  mod (float  a, float  b) { return a - b*floor(a/b); }
+	div		$tmp59 $tmp57 ___350_period 	%filename{"/prod/softprod/apps/arnold/mtoa/5.1.1/linux/maya-2020/plug-ins/../bin/../osl/include/stdosl.h"} %line{132} %argrw{"wrr"}
+	floor		$tmp58 $tmp59 	%argrw{"wr"}
+	mul		$tmp60 ___350_period $tmp58 	%argrw{"wrr"}
+	sub		___350_layer_u $tmp57 $tmp60 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:195
+#         float rnd_cells = cellnoise(point(layer_u, layer_v, layer_seed), 1);
+	assign		$tmp62 ___349_layer_seed 	%filename{"/prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl"} %line{195} %argrw{"wr"}
+	point		$tmp61 ___350_layer_u ___350_layer_v $tmp62 	%argrw{"wrrr"}
+	cellnoise	___350_rnd_cells $tmp61 $const9 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:196
+#         float depth_here = slit_depth_min + cellnoise(point(layer_u, layer_v, layer_seed), 2) * (slit_depth_max - slit_depth_min);
+	assign		$tmp65 ___349_layer_seed 	%line{196} %argrw{"wr"}
+	point		$tmp64 ___350_layer_u ___350_layer_v $tmp65 	%argrw{"wrrr"}
+	cellnoise	$tmp63 $tmp64 $const8 	%argrw{"wrr"}
+	sub		$tmp66 slit_depth_max slit_depth_min 	%argrw{"wrr"}
+	mul		$tmp67 $tmp63 $tmp66 	%argrw{"wrr"}
+	add		___350_depth_here slit_depth_min $tmp67 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:198
+#         float density = .2;
+	assign		___350_density $const19 	%line{198} %argrw{"wr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:200
+#         if (rnd_cells < density) { // keep "density" % of cells
+	lt		$tmp68 ___350_rnd_cells ___350_density 	%line{200} %argrw{"wrr"}
+	if		$tmp68 203 203 	%argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:201
+#             float slit_u = 2 * mod(layer_u, 1) - 1;
+	functioncall	$const18 121 	%line{201} %argrw{"r"}
+# /prod/softprod/apps/arnold/mtoa/5.1.1/linux/maya-2020/plug-ins/../bin/../osl/include/stdosl.h:132
+# float  mod (float  a, float  b) { return a - b*floor(a/b); }
+	div		$tmp71 ___350_layer_u $const9 	%filename{"/prod/softprod/apps/arnold/mtoa/5.1.1/linux/maya-2020/plug-ins/../bin/../osl/include/stdosl.h"} %line{132} %argrw{"wrr"}
+	floor		$tmp70 $tmp71 	%argrw{"wr"}
+	mul		$tmp72 $const9 $tmp70 	%argrw{"wrr"}
+	sub		$tmp69 ___350_layer_u $tmp72 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:201
+#             float slit_u = 2 * mod(layer_u, 1) - 1;
+	mul		$tmp73 $const8 $tmp69 	%filename{"/prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl"} %line{201} %argrw{"wrr"}
+	sub		___351_slit_u $tmp73 $const9 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:202
+#             float slit_v = 2 * mod(layer_v, 1) - 1;
+	functioncall	$const18 128 	%line{202} %argrw{"r"}
+# /prod/softprod/apps/arnold/mtoa/5.1.1/linux/maya-2020/plug-ins/../bin/../osl/include/stdosl.h:132
+# float  mod (float  a, float  b) { return a - b*floor(a/b); }
+	div		$tmp76 ___350_layer_v $const9 	%filename{"/prod/softprod/apps/arnold/mtoa/5.1.1/linux/maya-2020/plug-ins/../bin/../osl/include/stdosl.h"} %line{132} %argrw{"wrr"}
+	floor		$tmp75 $tmp76 	%argrw{"wr"}
+	mul		$tmp77 $const9 $tmp75 	%argrw{"wrr"}
+	sub		$tmp74 ___350_layer_v $tmp77 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:202
+#             float slit_v = 2 * mod(layer_v, 1) - 1;
+	mul		$tmp78 $const8 $tmp74 	%filename{"/prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl"} %line{202} %argrw{"wrr"}
+	sub		___351_slit_v $tmp78 $const9 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:205
+#             if (pattern_type == 2) {
+	eq		$tmp79 pattern_type $const7 	%line{205} %argrw{"wrr"}
+	if		$tmp79 133 133 	%argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:206
+#                 slit_v *= u;
+	mul		___351_slit_v ___351_slit_v u 	%line{206} %argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:208
+#             if (abs(slit_v) < slit_width) {
+	abs		$tmp80 ___351_slit_v 	%line{208} %argrw{"wr"}
+	lt		$tmp81 $tmp80 slit_width 	%argrw{"wrr"}
+	if		$tmp81 203 203 	%argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:210
+#                 float d = 0;
+	assign		___353_d $const1 	%line{210} %argrw{"wr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:211
+#                 if (slit_profile == 0) {
+	eq		$tmp82 slit_profile $const1 	%line{211} %argrw{"wrr"}
+	if		$tmp82 153 183 	%argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:212
+#                     n = x2_slit_normal(slit_u, slit_v, slit_width, depth_here);
+	functioncall	$const20 148 	%line{212} %argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:54
+#     float frac = v / l0;
+	div		___341_frac ___351_slit_v slit_width 	%line{54} %argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:55
+#     float dfdv = 2 * d0 * frac;
+	mul		$tmp83 $const8 ___350_depth_here 	%line{55} %argrw{"wrr"}
+	mul		___341_dfdv $tmp83 ___341_frac 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:57
+#     normal n = normal(0, -dfdv, 1);
+	neg		$tmp84 ___341_dfdv 	%line{57} %argrw{"wr"}
+	normal		___341_n $const10 $tmp84 $const9 	%argrw{"wrrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:58
+#     n /= length(n);
+	length		$tmp85 ___341_n 	%line{58} %argrw{"wr"}
+	div		___341_n ___341_n $tmp85 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:59
+#     return n;
+	assign		___353_n ___341_n 	%line{59} %argrw{"wr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:213
+#                     d = x2_slit_depth(slit_u, slit_v, slit_width, depth_here);
+	functioncall	$const21 153 	%line{213} %argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:69
+#     float frac = v / l0;
+	div		___342_frac ___351_slit_v slit_width 	%line{69} %argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:70
+#     return (frac * frac - 1) * d0;
+	mul		$tmp86 ___342_frac ___342_frac 	%line{70} %argrw{"wrr"}
+	sub		$tmp87 $tmp86 $const9 	%argrw{"wrr"}
+	mul		___353_d $tmp87 ___350_depth_here 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:214
+#                 } else if (slit_profile == 1) {
+	eq		$tmp88 slit_profile $const5 	%line{214} %argrw{"wrr"}
+	if		$tmp88 170 183 	%argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:215
+#                     n = v_slit_normal(slit_u, slit_v, slit_width, depth_here);
+	functioncall	$const22 165 	%line{215} %argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:32
+#     normal n = normal(0, v > 0 ? -d0 : d0, 1);
+	gt		$tmp90 ___351_slit_v $const1 	%line{32} %argrw{"wrr"}
+	if		$tmp90 159 160 	%argrw{"r"}
+	neg		$tmp89 ___350_depth_here 	%argrw{"wr"}
+	assign		$tmp89 ___350_depth_here 	%argrw{"wr"}
+	normal		___339_n $const10 $tmp89 $const9 	%argrw{"wrrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:33
+#     n /= length(n);
+	length		$tmp91 ___339_n 	%line{33} %argrw{"wr"}
+	div		___339_n ___339_n $tmp91 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:34
+#     return n;
+	assign		___353_n ___339_n 	%line{34} %argrw{"wr"}
+	return
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:216
+#                     d = v_slit_depth(slit_u, slit_v, slit_width, depth_here);
+	functioncall	$const23 170 	%line{216} %argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:44
+#     return (abs(v / l0) - 1) * d0;
+	div		$tmp93 ___351_slit_v slit_width 	%line{44} %argrw{"wrr"}
+	abs		$tmp92 $tmp93 	%argrw{"wr"}
+	sub		$tmp94 $tmp92 $const9 	%argrw{"wrr"}
+	mul		___353_d $tmp94 ___350_depth_here 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:217
+#                 } else if (slit_profile == 2) {
+	eq		$tmp95 slit_profile $const7 	%line{217} %argrw{"wrr"}
+	if		$tmp95 183 183 	%argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:218
+#                     n = random_slit_normal(slit_u, slit_v, slit_width, depth_here);
+	functioncall	$const24 178 	%line{218} %argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:77
+#     float rnd_angle = noise(v) * M_PI;
+	noise		$tmp96 ___351_slit_v 	%line{77} %argrw{"wr"}
+	mul		___343_rnd_angle $tmp96 $const25 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:78
+#     return normal(0, cos(rnd_angle), sin(rnd_angle));
+	cos		$tmp97 ___343_rnd_angle 	%line{78} %argrw{"wr"}
+	sin		$tmp98 ___343_rnd_angle 	%argrw{"wr"}
+	normal		___353_n $const10 $tmp97 $tmp98 	%argrw{"wrrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:219
+#                     d = x2_slit_depth(slit_u, slit_v, slit_width, depth_here);
+	functioncall	$const21 183 	%line{219} %argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:69
+#     float frac = v / l0;
+	div		___342_frac ___351_slit_v slit_width 	%line{69} %argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:70
+#     return (frac * frac - 1) * d0;
+	mul		$tmp99 ___342_frac ___342_frac 	%line{70} %argrw{"wrr"}
+	sub		$tmp100 $tmp99 $const9 	%argrw{"wrr"}
+	mul		___353_d $tmp100 ___350_depth_here 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:221
+#                 if (map_type == 0)
+	eq		$tmp101 map_type $const1 	%line{221} %argrw{"wrr"}
+	if		$tmp101 197 203 	%argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:223
+#                         n[0] * layer_du + n[1] * layer_dv + n[2] * vector(0, 0, 1)
+	compref		$tmp102 ___353_n $const1 	%line{223} %argrw{"wrr"}
+	mul		$tmp103 $tmp102 ___350_layer_du 	%argrw{"wrr"}
+	compref		$tmp104 ___353_n $const5 	%argrw{"wrr"}
+	mul		$tmp105 $tmp104 ___350_layer_dv 	%argrw{"wrr"}
+	add		$tmp106 $tmp103 $tmp105 	%argrw{"wrr"}
+	compref		$tmp107 ___353_n $const7 	%argrw{"wrr"}
+	mul		$tmp109 $tmp107 $const26 	%argrw{"wrr"}
+	add		$tmp110 $tmp106 $tmp109 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:222
+#                     Cout = normal_to_rgb(
+	functioncall	$const14 197 	%line{222} %argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:14
+#     return .5 + .5 * color(n);
+	assign		$tmp111 $tmp110 	%line{14} %argrw{"wr"}
+	mul		$tmp112 $const15 $tmp111 	%argrw{"wrr"}
+	add		Cout $const15 $tmp112 	%argrw{"wrr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:225
+#                 else if (map_type == 1)
+	eq		$tmp113 map_type $const5 	%line{225} %argrw{"wrr"}
+	if		$tmp113 203 203 	%argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:226
+#                     Cout = depth_to_rgb(d, slit_depth_max);
+	functioncall	$const16 203 	%line{226} %argrw{"r"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:21
+#     return color(1 + d / depth_max);
+	div		$tmp114 ___353_d slit_depth_max 	%line{21} %argrw{"wrr"}
+	add		$tmp115 $const9 $tmp114 	%argrw{"wrr"}
+	assign		Cout $tmp115 	%argrw{"wr"}
+# /prod/studio/pipeline-dev/arnold/fixBrushedMetalNormal.osl:160
+#     for (int layer_seed = seed * layers; layer_seed < (seed + 1) * layers; layer_seed++) {
+	assign		$tmp116 ___349_layer_seed 	%line{160} %argrw{"wr"}
+	add		___349_layer_seed ___349_layer_seed $const5 	%argrw{"wrr"}
+	end

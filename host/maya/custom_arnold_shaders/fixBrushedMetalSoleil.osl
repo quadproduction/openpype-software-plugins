@@ -1,0 +1,220 @@
+/* 
+ * Brushed metal normal map
+ *
+ * This creates an Arnold node that outputs a customizable, procedural brushed 
+ * metal normal map with a radial/"soleil" pattern
+ */
+
+/*
+ * line_length - returns a random line length between length_min and length_max for a given angular sector
+ */
+float line_length(float length_min, float length_max, float pid) {
+    return cellnoise(pid, 1) * (length_max - length_min) + length_min;
+}
+
+/*
+ * line_depth - returns a random line depth between depth_min and depth_max 
+ *               for a given slit on a given layer identified by `pid`, `rid` and `layer_seed`
+ */
+float line_depth(float depth_min, float depth_max, float pid, float rid, int layer_seed) {
+    return cellnoise(vector(pid, rid, layer_seed)) * (depth_max - depth_min) + depth_min;
+}
+
+/*
+ * filter_cells - returns a boolean saying whether to keep or discard a given slit
+ *                identified by its angular sector id `pid` and a distance from the center `r`
+ */
+int filter_cells(int seed, float pid, float r, float line_length, float density) {
+    float local_density = density * r * r;
+
+    return float(cellnoise(vector(seed, pid, r / line_length))) < local_density;
+}
+
+/*
+ * shifted_r - returns a randomly shifted radius for a given angular sector
+ *             to break up radial symmetry
+ */
+float shifted_r(float pid, float r) {
+    return r + cellnoise(pid);    
+}
+
+/*
+ * polar_id - returns a number identifying the angular sector that 
+ *            the point at (r, theta) polar coordinates belongs to
+ */
+float polar_id(int seed,
+               float r,
+               float theta,
+               float angle_period,
+               float width,
+               float length_min,
+               float length_max,
+               float density,
+    ) {
+    int i = int(floor(theta / angle_period));
+    int id = i;
+    while (theta - i * angle_period < M_PI * .5
+           && r * sin(theta - i * angle_period) < width) {
+        float len = line_length(length_min, length_max, i);
+        if (filter_cells(seed, i, shifted_r(i, r), len, density))
+            id = i;
+        i--;
+    }
+
+    return id;
+}
+
+/*
+ * normal_to_rgb - convert a unit vector to a valid RGB value
+ */
+color normal_to_rgb(normal n) {
+    return .5 + .5 * color(n);
+}
+
+/*
+ * depth_to_rgb - transforms range [-depth_max, 0] to [0, 1] for use as an RGB map
+ */
+color depth_to_rgb(float d, float depth_max) {
+    return color(1 + d / depth_max);
+}
+
+/*
+ * x2_slit_normal - takes in UV values inside a given slit,
+ *                  and returns the normal corresponding to a parabola profile
+ *                  with d0 as its maximum depth
+ *                  and l0 as its slit length.
+ */
+normal x2_slit_normal(float u, float v, float l0, float d0) {
+    float frac = v / l0;
+    float dfdv = 2 * d0 * frac;
+
+    normal n = normal(0, -dfdv, 1);
+    
+    n /= length(n);
+    return n;
+}
+
+/*
+ * x2_slit_depth - takes in UV values inside a given slit,
+ *                 and returns the depth corresponding to a parabola profile
+ *                 with d0 as its maximum depth
+ *                 and l0 as its slit length.
+ */
+float x2_slit_depth(float u, float v, float l0, float d0) {
+    float frac = v / l0;
+    return (frac * frac - 1) * d0;
+}
+
+/*
+ * slits_layer - output a depth and normal for a single layer determined by `seed`
+ *               returns 1 if the specified point (r, theta) is cointained by a slit on that layer
+ */
+int slits_layer(int seed,
+                int map_type,
+                float r,
+                float theta,
+                float tRep,
+                float width,
+                float depth_min,
+                float depth_max,
+                float length_min,
+                float length_max,
+                float density,
+                output normal n,
+                output float d
+    ) {
+    
+    
+    float thetaPeriod = (2 * M_PI) / tRep;
+    float pid = polar_id(seed, r, theta, thetaPeriod, width, length_min, length_max, density);
+    float sr = shifted_r(pid, r);
+
+    float dtheta = theta - pid * thetaPeriod;
+    
+    float slit_v = sin(dtheta) * r / width;
+    float slit_u = mod(sr, 1);
+
+    if (abs(slit_v - .5) < .5) {
+        float length = line_length(length_min, length_max, pid);
+        float depth = line_depth(depth_min, depth_max, pid, sr, seed);
+        if (filter_cells(seed, pid, sr, length, density)) {
+            float centered_u = 2 * slit_u - 1;
+            float centered_v = 2 * slit_v - 1;
+            n = x2_slit_normal(centered_u, centered_v, 1, depth);
+            d = x2_slit_depth(centered_u, centered_v, 1, depth);
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/*
+ * rotate_uv - compute the uv derivatives in the UV plane rotated counter-clockwise by `angle`
+ */
+void rotate_uv(float angle,
+               output vector du, output vector dv) {
+    float c = cos(angle);
+    float s = sin(angle);
+
+    du = vector(c, s, 0);
+    dv = vector(-s, c, 0);
+}
+
+shader fixBrushedMetalSoleil(
+    int map_type = 0 [[ string widget = "popup", string options = "Normal|Depth" ]],
+    int seed = 0,
+    int brush_rails = 500,
+    float line_width = .005,
+    float line_depth_min = .5,
+    float line_depth_max = .5,
+    float line_length_min = 1,
+    float line_length_max = 1,
+    float density = .2,
+    int layers = 10,
+    float angle_jitter = 0,
+    string version = "1.3",
+// version is not an actual parameter, should be left unchanged by the user (found no cleaner way to do this)
+    output color Cout = color(.5, .5, 1)
+    )
+{
+    float gu = (2 * u - 1);
+    float gv = (2 * v - 1);
+
+    float r = sqrt(gu * gu + gv * gv);
+    float theta = atan2(gv, gu) + M_PI;
+    normal n = normal(0, 0, 1);
+    float d = 0;
+
+    for (int layer_seed = seed * layers; layer_seed < (seed + 1) * layers; layer_seed++) {
+        vector du, dv;
+        float rnd_angle = 2 * M_PI * cellnoise(layer_seed, 0);
+        float rnd_twist = angle_jitter * (2 * cellnoise(layer_seed, 1) - 1);
+        float layer_theta = theta + rnd_angle + rnd_twist * log(r);
+        layer_theta = mod(layer_theta, 2 * M_PI);
+        rotate_uv(theta, du, dv);
+        if (slits_layer(layer_seed,
+                        map_type,
+                        r,
+                        layer_theta,
+                        brush_rails,
+                        line_width,
+                        line_depth_min,
+                        line_depth_max,
+                        line_length_min,
+                        line_length_max,
+                        density,
+                        n,
+                        d)) {
+            n = n[0] * du + n[1] * dv + n[2] * vector(0, 0, 1);
+            break;
+        }
+    }
+
+    if (map_type == 0) {
+        Cout = normal_to_rgb(n);
+    } else if (map_type == 1) {
+        Cout = depth_to_rgb(d, line_depth_max);
+    }
+}
+

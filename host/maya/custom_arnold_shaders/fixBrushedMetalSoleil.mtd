@@ -1,0 +1,50 @@
+[node fixBrushedMetalSoleil]
+    maya.name               STRING  "fixBrushedMetalSoleil"
+    maya.id                 INT      0x00010002
+    maya.classification     STRING  "utility/color"
+    maya.output_name        STRING  "Cout"
+    maya.output_shortname   STRING  "out"
+    
+    [attr map_type]
+        min                 INT     0
+        max                 INT     2
+
+    [attr seed]
+        min                 INT     0
+
+    [attr brush_rails]
+        min                 INT     0
+        softmax             INT     1000
+
+    [attr line_width]
+        min                 FLOAT   0
+        softmax             FLOAT   .1
+    
+    [attr line_length_min]
+        min                 FLOAT   0
+        softmax             FLOAT   1
+    
+    [attr line_length_max]
+        min                 FLOAT   0
+        softmax             FLOAT   1
+    
+    [attr line_depth_min]
+        min                 FLOAT   0
+        softmax             FLOAT   2
+    
+    [attr line_depth_max]
+        min                 FLOAT   0
+        softmax             FLOAT   2
+    
+    [attr density]
+        min                 FLOAT   0
+        max                 FLOAT   1
+    
+    [attr layers]
+        min                 INT     1
+        softmax             INT     100
+
+    [attr angle_jitter]
+        min                 FLOAT   0
+        softmax             FLOAT   .1
+
