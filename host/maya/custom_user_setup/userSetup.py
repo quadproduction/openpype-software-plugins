@@ -56,7 +56,7 @@ def get_deadlinecommand():
             return exe
 
     # On OSX, we look for the DEADLINE_PATH file if the environment variable does not exist.
-    if path.exists("/Users/Shared/Thinkbox/DEADLINE_PATH"):
+    if Path("/Users/Shared/Thinkbox/DEADLINE_PATH").resolve().exists():
         with open("/Users/Shared/Thinkbox/DEADLINE_PATH") as dl_file:
             deadline_bin = dl_file.read().strip()
         exe = find_executable("deadlinecommand", deadline_bin)
