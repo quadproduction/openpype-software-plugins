@@ -1,11 +1,13 @@
-from os import getenv, environ, pathsep, path, sep
+import os
 from distutils.spawn import find_executable
 from pathlib import Path
 import sys
 import subprocess
 import json
+
 import maya.mel as mel
 from maya import cmds
+
 
 def add_python_folder_to_path(path: Path):
     print(f"Adding {path} to sys.path")
@@ -22,15 +24,16 @@ def add_mel_folder_to_MAYA_SCRIPT_PATH(path: Path):
         return
 
     print(f"Adding {path} to MAYA_SCRIPT_PATH")
-    if environ.get("MAYA_SCRIPT_PATH"):
-        environ["MAYA_SCRIPT_PATH"] = f"{path}{pathsep}{environ['MAYA_SCRIPT_PATH']}"
+    if os.environ.get("MAYA_SCRIPT_PATH"):
+        os.environ["MAYA_SCRIPT_PATH"] = str(Path(path).joinpath(os.environ['MAYA_SCRIPT_PATH']).resolve())
     else:
-        environ["MAYA_SCRIPT_PATH"] = str(path)
+        os.environ["MAYA_SCRIPT_PATH"] = str(path)
 
     sub_dir = [x for x in path.iterdir() if x.is_dir()]
     if sub_dir:
         for dir in sub_dir:
             add_mel_folder_to_MAYA_SCRIPT_PATH(dir)
+
 
 def get_deadlinecommand():
     """
@@ -42,7 +45,7 @@ def get_deadlinecommand():
 
     for env in ("DEADLINE_PATH", "PATH"):
         try:
-            env_value = environ[env]
+            env_value = os.environ[env]
         except KeyError:
             # if the error is a key error it means that DEADLINE_PATH is not set.
             # however Deadline command may be in the PATH or on OSX it could be in the file /Users/Shared/Thinkbox/DEADLINE_PATH
@@ -60,7 +63,7 @@ def get_deadlinecommand():
         if exe:
             return exe
 
-    raise Exception("Deadline could not be found.  Please ensure that Deadline is installed.")
+    raise Exception("Deadline could not be found. Please ensure that Deadline is installed.")
 
 
 def call_deadlinecommand(arguments, format_output_as_json=False):
@@ -100,7 +103,7 @@ def GetMayaSubmissionDir():
     # Maya always uses / for it's path separators regardless of platform
     PATH_SEP = '/'
     json_out = call_deadlinecommand(["-GetRepositoryPath", "submission/Maya/Main"], format_output_as_json=True)
-    return json_out.replace(sep, PATH_SEP)
+    return json_out.replace(os.sep, PATH_SEP)
 
 
 def load_deadline_submitters():
@@ -115,7 +118,7 @@ def load_deadline_submitters():
         return
 
     submission_file = '{}/SubmitMayaToDeadline.mel'.format(submission_dir)
-    if path.isfile(submission_file):
+    if Path(submission_file).is_file():
         mel.eval('source "{}";'.format(submission_file))
     else:
         print('Deadline submission directory does not contain SubmitMayaToDeadlne.mel')
@@ -123,17 +126,29 @@ def load_deadline_submitters():
     print('Deadline has been successfully loaded')
 
 
+def install_python_plugins():
+    # Plugin: Studio Library
+    from studiolibrary_installer import install
+    install()
+    # ----------------------
+
+
 if __name__ == "__main__":
+    OPENPYPE_SOFTWARE_PLUGINS = os.getenv('OPENPYPE_SOFTWARE_PLUGINS')
+    print("#" * 10, f" Starting custom userSetup.py for openpype_software_plugins from {OPENPYPE_SOFTWARE_PLUGINS} ", "#" * 10)
 
-    print("#" * 10, f" Starting custom userSetup.py for openpype_software_plugins from {getenv('OPENPYPE_SOFTWARE_PLUGINS')} ", "#" * 10)
-
-    python_folder = Path(getenv("OPENPYPE_SOFTWARE_PLUGINS")) / "host" / "maya" / "python"
+    # Add Python scripts to PYTHONPATH
+    python_folder = Path(OPENPYPE_SOFTWARE_PLUGINS).joinpath("host", "maya", "python").resolve()
     add_python_folder_to_path(python_folder)
 
-    mel_folder = Path(getenv("OPENPYPE_SOFTWARE_PLUGINS")) / "host" / "maya" / "mel"
+    # Install annexes Python plugins
+    cmds.evalDeferred(install_python_plugins)
+
+    # Mel Plugins
+    mel_folder = Path(OPENPYPE_SOFTWARE_PLUGINS).joinpath("host", "maya", "mel").resolve()
     add_mel_folder_to_MAYA_SCRIPT_PATH(mel_folder)
 
-    # Have maya load the submitters after it finishes loading all mel script files.
+    # Have Maya load the submitters after it finishes loading all mel script files.
     cmds.evalDeferred(load_deadline_submitters)
 
-    print("#" * 10, f" Finishing custom userSetup.py for openpype_software_plugins from {getenv('OPENPYPE_SOFTWARE_PLUGINS')} ", "#" * 10)
+    print("#" * 10, f" Finishing custom userSetup.py for openpype_software_plugins from {OPENPYPE_SOFTWARE_PLUGINS} ", "#" * 10)
