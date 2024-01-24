@@ -18,7 +18,7 @@ def install():
     shelf_elems = cmds.shelfLayout(shelf_name, query=True, fullPathName=True, childArray=True)
 
     for shelf_elem in shelf_elems:
-        shelf_elem_fullname = "shelf_name|{}".format(shelf_name, shelf_elem)
+        shelf_elem_fullname = "{}|{}".format(shelf_name, shelf_elem)
         if cmds.objectTypeUI(shelf_elem, isType="shelfButton") and \
             cmds.shelfButton(shelf_elem_fullname, query=True, annotation=True) == plugin_name:
             cmds.deleteUI(shelf_elem_fullname, control=True)
