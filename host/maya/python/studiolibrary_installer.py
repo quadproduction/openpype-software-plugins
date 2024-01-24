@@ -9,4 +9,4 @@ def install():
     globals_dict = globals()
     globals_dict["__file__"] = plugin_package_script_path.resolve()
 
-    exec(open(plugin_package_script_path).read(), globals_dict)
+    #exec(open(plugin_package_script_path).read(), globals_dict)
