@@ -1,21 +1,12 @@
-import hiero.core
-
-
-def get_track_items():
-    # Get the active project
-    project = hiero.core.projects()[-1]  # Assuming the last project is the active one
-
-    # Get track items
-    track_items = []
-    for track in project.videoTracks():
-        for item in track.items():
-            track_items.append(item)
-
-    return track_items
+from openpype.hosts.hiero.api import get_track_items
 
 
 def run():
     track_items = get_track_items()
+
+    if not track_items:
+        return
+
     for track_item in track_items:
         track_name = track_item.parentTrack().name()
         tags = track_item.tags()
